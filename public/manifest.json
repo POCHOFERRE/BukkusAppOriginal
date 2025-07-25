@@ -1,0 +1,32 @@
+{
+  "short_name": "BuKKus",
+  "name": "BuKKus - Intercambiá libros con propósito",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#f7b22a",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon_bukkus_yellow_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon_bukkus_yellow_256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon_bukkus_yellow_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon_bukkus_yellow_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

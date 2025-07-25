@@ -1,0 +1,200 @@
+/* index.css - estilo minimalista */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset básico para evitar conflictos visuales */
+html,
+body {
+  margin: 0;
+  padding: 0;
+ 
+    font-family: 'Quicksand', sans-serif !important;
+  
+  
+  background-color: #f9fafb;
+  color: #1f2937;
+  line-height: 1.5;
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+h1, .titulo-principal {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+}
+
+
+/* Evitar que tarjetas se recorten o colapsen entre sí */
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Botones base */
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Quitar subrayado de enlaces */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Scroll minimalista (opcional) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Contenedor general para mantener layouts centrados */
+.container {
+  max-width: 80rem; /* ≈1280px */
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Card básica para elementos como libros */
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+
+
+
+/* Estilo uniforme para inputs, selects y textareas */
+.input-bukkus,
+.select-bukkus,
+.textarea-bukkus {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-family: 'Quicksand', sans-serif !important;
+  background-color: #fff;
+  color: #1f2937; /* gris oscuro */
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.input-bukkus:focus,
+.select-bukkus:focus,
+.textarea-bukkus:focus {
+  border-color: #f7b22a;
+  box-shadow: 0 0 0 2px rgba(247, 178, 42, 0.3);
+  outline: none;
+}
+
+/* Placeholder más suave */
+.input-bukkus::placeholder,
+.textarea-bukkus::placeholder {
+  color: #9ca3af; /* gris claro */
+}
+
+/* Texto dentro del select */
+.select-bukkus {
+  appearance: none; /* Ocultar flechita por defecto en algunos navegadores */
+  background-image: url("data:image/svg+xml,%3Csvg fill='%231f2937' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+
+/* Ocultar la barra de desplazamiento horizontal en carruseles */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;     /* Firefox */
+  overflow-x: auto;          /* Asegura que se pueda scrollear horizontalmente */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari y Opera */
+}
+
+
+/* Asegurarse de que el contenido se pueda desplazar sin mostrar la barra */
+.scroll-smooth {
+  -webkit-overflow-scrolling: touch; /* Mejorar desplazamiento en iOS */
+}
+/* Modal Background */
+.modal-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro */
+  z-index: 1000;
+}
+
+/* Modal Content */
+.modal-content {
+  max-height: 80vh;
+  overflow-y: auto; /* Agregar scroll si el contenido es más grande */
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+}
+
+/* Joyride styles (imprescindibles) */
+.joyride-tooltip,
+.joyride-beacon {
+  z-index: 999999 !important;
+}
+
+.joyride-tooltip {
+  border-radius: 0.75rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  padding: 1rem;
+  max-width: 320px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.joyride-tooltip__button {
+  background-color: #f7b22a;
+  color: black;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.joyride-tooltip__button:hover {
+  background-color: #e09e20;
+}
+
+.joyride-tooltip__close {
+  display: none;
+}
+
+.joyride-overlay {
+  z-index: 999998 !important;
+}
