@@ -1,3 +1,5 @@
+// JSX actualizado de LoginBukKus.jsx con soporte para gustos literarios, zona y apellido visibles en el perfil
+
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import Confetti from "react-confetti";
@@ -73,51 +75,38 @@ export default function LoginBukKus({ onClose, loading }) {
     e.preventDefault();
     setError("");
 
-    if (!navigator.geolocation) {
-      setError("Tu navegador no soporta geolocalización.");
-      return;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: nombre });
+
+      await setDoc(doc(db, "usuarios", cred.user.uid), {
+        id: cred.user.uid,
+        nombre,
+        apellido,
+        email: cred.user.email,
+        avatar: cred.user.photoURL || "https://i.pravatar.cc/29?=default",
+        telefono: "",
+        ciudad: zona || "",
+        gustoLiterario,
+        gustos: gustoLiterario ? [gustoLiterario] : [],
+        bio: "",
+        genero: "",
+        tipoCuenta: "free",
+        favoritos: [],
+        mision: "",
+        saldoTokens: 0,
+        ubicacion: null,
+        fechaRegistro: new Date().toISOString(),
+      });
+
+      setMostrarBienvenida(true);
+      setTimeout(() => {
+        setMostrarBienvenida(false);
+        if (onClose) onClose();
+      }, 3500);
+    } catch (err) {
+      setError("No se pudo registrar: " + (err.message || err.code));
     }
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-
-        try {
-          const cred = await createUserWithEmailAndPassword(auth, email, password);
-          await updateProfile(cred.user, { displayName: nombre });
-
-          await setDoc(doc(db, "usuarios", cred.user.uid), {
-            id: cred.user.uid,
-            nombre,
-            apellido,
-            email: cred.user.email,
-            avatar: cred.user.photoURL || "https://i.pravatar.cc/29?=default",
-            telefono: "",
-            ciudad: zona || "",
-            gustoLiterario,
-            bio: "",
-            genero: "",
-            tipoCuenta: "free",
-            favoritos: [],
-            mision: "",
-            saldoTokens: 0,
-            ubicacion: { lat: latitude, lng: longitude },
-            fechaRegistro: new Date().toISOString(),
-          });
-
-          setMostrarBienvenida(true);
-          setTimeout(() => {
-            setMostrarBienvenida(false);
-            if (onClose) onClose();
-          }, 3500);
-        } catch (err) {
-          setError("No se pudo registrar: " + (err.message || err.code));
-        }
-      },
-      () => {
-        setError("No se pudo obtener tu ubicación. Permití el acceso para registrarte.");
-      }
-    );
   };
 
   const handleLogin = async (e) => {
@@ -147,6 +136,7 @@ export default function LoginBukKus({ onClose, loading }) {
         telefono: "",
         ciudad: zona || "",
         gustoLiterario,
+        gustos: gustoLiterario ? [gustoLiterario] : [],
         bio: "",
         genero: "",
         tipoCuenta: "free",
@@ -189,7 +179,6 @@ export default function LoginBukKus({ onClose, loading }) {
                   required
                 />
               </div>
-
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <FaUser className="w-4 h-4" />
@@ -203,7 +192,6 @@ export default function LoginBukKus({ onClose, loading }) {
                   required
                 />
               </div>
-
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <FaMapMarkerAlt className="w-4 h-4" />
@@ -216,13 +204,10 @@ export default function LoginBukKus({ onClose, loading }) {
                 >
                   <option value="">Seleccioná tu zona</option>
                   {zonasPermitidas.map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
+                    <option key={z} value={z}>{z}</option>
                   ))}
                 </select>
               </div>
-
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <FaBookOpen className="w-4 h-4" />
@@ -235,9 +220,7 @@ export default function LoginBukKus({ onClose, loading }) {
                 >
                   <option value="">Gusto literario</option>
                   {gustos.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
+                    <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
               </div>

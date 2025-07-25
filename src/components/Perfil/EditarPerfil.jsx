@@ -18,8 +18,16 @@ export default function EditarPerfil() {
   const navigate = useNavigate();
   const { usuarioActivo, setUsuarioActivo } = useContext(UserContext);
   const [formData, setFormData] = useState({
-    nombre: "", alias: "", ciudad: "", bio: "", avatar: "",
-    telefono: "", emailAlternativo: "", gustos: [], lema: ""
+    nombre: "",
+    apellido: "",
+    alias: "",
+    ciudad: "",
+    bio: "",
+    avatar: "",
+    telefono: "",
+    emailAlternativo: "",
+    gustos: [],
+    lema: ""
   });
   const [otrosGustos, setOtrosGustos] = useState("");
   const [previewAvatar, setPreviewAvatar] = useState("");
@@ -32,13 +40,15 @@ export default function EditarPerfil() {
     const unsub = onSnapshot(refUsuario, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
+        const aliasGenerado = data.alias || generarAlias(usuarioActivo.email);
 
         setFormData((prev) => ({
           ...prev,
           ...data,
+          alias: data.alias || aliasGenerado,
           ciudad: prev.ciudad || data.ciudad || "",
           gustos: Array.isArray(data.gustos)
-            ? data.gustos
+            ? [...new Set(data.gustos)]
             : data.gustos?.split(",").map((g) => g.trim()) || [],
         }));
 
@@ -96,6 +106,7 @@ export default function EditarPerfil() {
 
       const nuevosDatos = {
         nombre: formData.nombre,
+        apellido: formData.apellido,
         alias: formData.alias || generarAlias(usuarioActivo.email),
         ciudad: formData.ciudad || usuarioActivo?.ciudad || "",
         bio: formData.bio,
@@ -107,12 +118,10 @@ export default function EditarPerfil() {
         notificaciones: formData.notificaciones !== false,
         sonido: formData.sonido !== false,
       };
-      
 
       await setDoc(refUsuario, nuevosDatos, { merge: true });
       setUsuarioActivo((prev) => ({ ...prev, ...nuevosDatos }));
-
-      navigate("/"); // ✅ Redirección directa sin alert
+      navigate("/");
     } catch (error) {
       console.error("Error al guardar perfil:", error);
     } finally {
@@ -123,7 +132,7 @@ export default function EditarPerfil() {
   return (
     <div className="space-y-6 pb-12 relative">
       {cargando && (
-        <div className="absolute inset-0 z-50  bg-opacity-80 flex items-center justify-center">
+        <div className="absolute inset-0 z-50 bg-opacity-80 flex items-center justify-center">
           <div className="animate-spin h-10 w-10 border-4 border-yellow-500 border-t-transparent rounded-full" />
         </div>
       )}
@@ -144,7 +153,8 @@ export default function EditarPerfil() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="Nombre completo" icon={<FiUser />} name="nombre" value={formData.nombre} onChange={handleChange} />
+        <Input label="Nombre" icon={<FiUser />} name="nombre" value={formData.nombre} onChange={handleChange} />
+        <Input label="Apellido" icon={<FiUser />} name="apellido" value={formData.apellido} onChange={handleChange} />
         <Input label="Alias" icon={<FiEdit3 />} name="alias" value={formData.alias} onChange={handleChange} />
         <Input label="Zona" icon={<FiMapPin />} name="ciudad" value={formData.ciudad} onChange={handleChange} />
         <Input label="Teléfono" icon={<FiPhone />} name="telefono" value={formData.telefono} onChange={handleChange} />
@@ -187,43 +197,42 @@ export default function EditarPerfil() {
           Guardar cambios
         </button>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-8">
-  <div className="flex flex-col gap-2 text-sm text-gray-600">
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={formData.notificaciones !== false}
-        onChange={(e) =>
-          setFormData((prev) => ({ ...prev, notificaciones: e.target.checked }))
-        }
-      />
-      Activar notificaciones push
-    </label>
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={formData.sonido !== false}
-        onChange={(e) =>
-          setFormData((prev) => ({ ...prev, sonido: e.target.checked }))
-        }
-      />
-      Activar sonido de notificación
-    </label>
-    
-  </div>
+          <div className="flex flex-col gap-2 text-sm text-gray-600">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.notificaciones !== false}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, notificaciones: e.target.checked }))
+                }
+              />
+              Activar notificaciones push
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.sonido !== false}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, sonido: e.target.checked }))
+                }
+              />
+              Activar sonido de notificación
+            </label>
+          </div>
 
-  <button
-    onClick={() => {
-      localStorage.clear();
-      setUsuarioActivo(null);
-      navigate("/");
-    }}
-    className="bg-red-500 text-white px-5 py-1.5 rounded-full shadow hover:bg-red-600 transition-all text-sm"
-  >
-    Cerrar sesión
-  </button>
-</div>
-
+          <button
+            onClick={() => {
+              localStorage.clear();
+              setUsuarioActivo(null);
+              navigate("/");
+            }}
+            className="bg-red-500 text-white px-5 py-1.5 rounded-full shadow hover:bg-red-600 transition-all text-sm"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
+
       <div className="pt-4 border-t border-gray-200 mt-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Opciones de ayuda</h3>
         {usuarioActivo && (
@@ -231,24 +240,22 @@ export default function EditarPerfil() {
             <button
               onClick={() => {
                 localStorage.removeItem(`tourVisto_${usuarioActivo.id}`);
-                // Show confirmation message
                 alert('¡Listo! El tour de bienvenida se reiniciará cuando recargues la página.');
               }}
               className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium"
               title="Reiniciar el recorrido de bienvenida"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.1a7 7 0 0111.6 2.6 1 1 0 11-1.9.7A5 5 0 006 7h3a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.01 9.06a1 1 0 011.28.61A5 5 0 0014 13h-3a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.1a7 7 0 01-11.6-2.6 1 1 0 01.61-1.28z" clipRule="evenodd" />
               </svg>
               Repetir tour de bienvenida
             </button>
             <p className="text-sm text-gray-500 mt-2 sm:mt-0">
-              ¿Neitas ayuda? Reinicia el recorrido guiado de la aplicación.
+              ¿Necesitás ayuda? Reiniciá el recorrido guiado de la app.
             </p>
           </div>
         )}
       </div>
-
     </div>
   );
 }
