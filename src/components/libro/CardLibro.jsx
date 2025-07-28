@@ -127,31 +127,7 @@ export default function CardLibro({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-     {libro.cantidad > 1 && (
-  <div
-    className="absolute top-2 left-2 z-30 group cursor-pointer animate-pulse"
-    onClick={cargarUsuariosQuePublicaron}
-  >
-    <div className="flex items-center gap-1 bg-[#f7b22a] text-black text-[12px] font-bold px-3 py-1 rounded-full shadow-lg transition-transform hover:scale-105">
-      <FaUsers className="text-[14px] animate-bounce-slow" /> {libro.cantidad}
-    </div>
-    <div className="absolute -top-11 left-0 bg-black text-white text-[10px] px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-      {`${libro.cantidad} usuarios publicaron este libro. ¡Intercambiá el tuyo!`}
-    </div>
-
-    <style>
-      {`
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-2px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 1.8s infinite;
-        }
-      `}
-    </style>
-  </div>
-)}
+ 
 
 
         <img
@@ -193,6 +169,19 @@ export default function CardLibro({
         </div>
         <p className="text-[11px] text-gray-400 line-clamp-1">{libro.autor}</p>
         <p className="text-[11px] text-gray-500 line-clamp-1">{libro.editorial}</p>
+
+{libro.cantidad > 1 && (
+  <button
+    onClick={cargarUsuariosQuePublicaron}
+    className="mt-1 text-[10px] text-yellow-300 bg-zinc-800 border border-yellow-400 rounded-full px-2 py-0.5 inline-flex items-center gap-1 hover:bg-yellow-400 hover:text-black transition"
+    title="Ver usuarios que publicaron este libro"
+  >
+    <FaUsers className="text-[12px]" />
+    {libro.cantidad} usuarios lo publicaron
+  </button>
+)}
+
+
 
         {libro.valorToken > 0 && (
           <span className="bg-[#f7b22a] text-black text-[11px] px-2 py-0.5 rounded-full inline-block mt-1">

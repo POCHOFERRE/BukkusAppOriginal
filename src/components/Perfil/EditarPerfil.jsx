@@ -18,16 +18,8 @@ export default function EditarPerfil() {
   const navigate = useNavigate();
   const { usuarioActivo, setUsuarioActivo } = useContext(UserContext);
   const [formData, setFormData] = useState({
-    nombre: "",
-    apellido: "",
-    alias: "",
-    ciudad: "",
-    bio: "",
-    avatar: "",
-    telefono: "",
-    emailAlternativo: "",
-    gustos: [],
-    lema: ""
+    nombre: "", apellido: "", alias: "", ciudad: "", bio: "", avatar: "",
+    telefono: "", emailAlternativo: "", gustos: [], lema: ""
   });
   const [otrosGustos, setOtrosGustos] = useState("");
   const [previewAvatar, setPreviewAvatar] = useState("");
@@ -40,15 +32,13 @@ export default function EditarPerfil() {
     const unsub = onSnapshot(refUsuario, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        const aliasGenerado = data.alias || generarAlias(usuarioActivo.email);
 
         setFormData((prev) => ({
           ...prev,
           ...data,
-          alias: data.alias || aliasGenerado,
           ciudad: prev.ciudad || data.ciudad || "",
           gustos: Array.isArray(data.gustos)
-            ? [...new Set(data.gustos)]
+            ? data.gustos
             : data.gustos?.split(",").map((g) => g.trim()) || [],
         }));
 
@@ -73,16 +63,43 @@ export default function EditarPerfil() {
     }));
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewAvatar(reader.result);
-      setFormData((prev) => ({ ...prev, avatar: reader.result }));
-    };
-    reader.readAsDataURL(file);
+  
+    try {
+      // COMPRESIÓN BRUTAL CON CANVAS
+      const comprimirImagen = (file, maxWidth = 600, quality = 0.6) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              const scale = maxWidth / img.width;
+              const width = maxWidth;
+              const height = img.height * scale;
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, width, height);
+              const base64 = canvas.toDataURL("image/jpeg", quality);
+              resolve(base64);
+            };
+          };
+        });
+      };
+  
+      const base64 = await comprimirImagen(file); // 📉 Compresión extrema
+      setPreviewAvatar(base64);
+      setFormData((prev) => ({ ...prev, avatar: base64 }));
+    } catch (error) {
+      console.error("Error al procesar la imagen:", error);
+    }
   };
+  
 
   const generarAlias = (email) => {
     const base = email?.split("@")[0] || "usuario";
@@ -121,6 +138,7 @@ export default function EditarPerfil() {
 
       await setDoc(refUsuario, nuevosDatos, { merge: true });
       setUsuarioActivo((prev) => ({ ...prev, ...nuevosDatos }));
+
       navigate("/");
     } catch (error) {
       console.error("Error al guardar perfil:", error);
@@ -240,18 +258,18 @@ export default function EditarPerfil() {
             <button
               onClick={() => {
                 localStorage.removeItem(`tourVisto_${usuarioActivo.id}`);
-                alert('¡Listo! El tour de bienvenida se reiniciará cuando recargues la página.');
+                alert('¡Listo! El tour se reiniciará cuando recargues la página.');
               }}
               className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium"
-              title="Reiniciar el recorrido de bienvenida"
+              title="Reiniciar el tour"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.1a7 7 0 0111.6 2.6 1 1 0 11-1.9.7A5 5 0 006 7h3a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.01 9.06a1 1 0 011.28.61A5 5 0 0014 13h-3a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.1a7 7 0 01-11.6-2.6 1 1 0 01.61-1.28z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
               </svg>
               Repetir tour de bienvenida
             </button>
             <p className="text-sm text-gray-500 mt-2 sm:mt-0">
-              ¿Necesitás ayuda? Reiniciá el recorrido guiado de la app.
+              ¿Necesitás ayuda? Reiniciá el tour guiado de la app.
             </p>
           </div>
         )}

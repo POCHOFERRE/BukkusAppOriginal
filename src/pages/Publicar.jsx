@@ -75,24 +75,46 @@ export default function Publicar() {
 
   const manejarImagenes = async (e) => {
     const archivos = Array.from(e.target.files).slice(0, 5);
-    const base64Promises = archivos.map((archivo) => {
-      return new Promise((resolve, reject) => {
-        if (!archivo.type.startsWith("image/")) return reject("Archivo no es imagen");
+  
+    const comprimirImagen = (file, maxWidth = 600, quality = 0.6) => {
+      return new Promise((resolve) => {
         const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result.toString());
-        reader.onerror = () => reject("Error al leer archivo");
-        reader.readAsDataURL(archivo);
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const scale = maxWidth / img.width;
+            const width = maxWidth;
+            const height = img.height * scale;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL("image/jpeg", quality);
+            resolve(compressed);
+          };
+        };
       });
-    });
+    };
   
     try {
-      const base64List = await Promise.all(base64Promises);
-      setImagenes(base64List);
-      setVistaPrevia(base64List);
+      const base64List = await Promise.all(
+        archivos.map(async (archivo) => {
+          if (!archivo.type.startsWith("image/")) return null;
+          return await comprimirImagen(archivo);
+        })
+      );
+  
+      const filtradas = base64List.filter(Boolean);
+      setImagenes(filtradas);
+      setVistaPrevia(filtradas);
     } catch (error) {
-      console.error("Error cargando imágenes:", error);
+      console.error("Error al comprimir imágenes:", error);
     }
   };
+  
   
 
   const publicarLibro = async () => {

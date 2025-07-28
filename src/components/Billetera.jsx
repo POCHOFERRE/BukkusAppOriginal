@@ -191,6 +191,31 @@ export default function Billetera() {
           </button>
         </div>
       </div>
+
+      {/* PAQUETES DE RECARGA */}
+<div className="bg-zinc-800 p-4 rounded-xl mb-6 shadow-md">
+  <h3 className="font-semibold mb-3 text-white">Recargar BUKKoins</h3>
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    {[
+      { monto: 50, precio: "$500", link: "https://mpago.la/link1" },
+      { monto: 100, precio: "$900", link: "https://mpago.la/link2" },
+      { monto: 250, precio: "$2000", link: "https://mpago.la/link3" },
+    ].map((pack, i) => (
+      <a
+        key={i}
+        href={pack.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-[#f7b22a] text-black p-4 rounded-xl shadow hover:bg-yellow-300 transition flex flex-col items-center"
+      >
+        <p className="text-xl font-bold">{pack.monto} BUKK</p>
+        <p className="text-sm text-gray-700">{pack.precio}</p>
+        <p className="text-xs mt-1 italic">Recarga instantánea</p>
+      </a>
+    ))}
+  </div>
+</div>
+
   
       {/* MOVIMIENTOS */}
       <h3 className="font-semibold text-lg mb-2 text-black">Movimientos</h3>
