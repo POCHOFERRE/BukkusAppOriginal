@@ -1,20 +1,10 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { 
-  doc, 
-  updateDoc, 
-  onSnapshot, 
-  query, 
-  collection, 
-  where, 
-  getDocs, 
-  getDoc 
-} from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { toast } from "react-toastify";
-import { FaRegStar, FaStar, FaUsers } from "react-icons/fa";
-import { FiMapPin } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { Star, StarFill, GeoAlt, PersonPlus, ChevronRight, X } from 'react-bootstrap-icons';
 
 export default function CardLibro({
   libro,
@@ -27,7 +17,6 @@ export default function CardLibro({
 }) {
   const navigate = useNavigate();
   const [esFavorito, setEsFavorito] = useState(false);
-  const [animarFavorito, setAnimarFavorito] = useState(false);
   const [datosUsuario, setDatosUsuario] = useState({});
   const [indiceImagen, setIndiceImagen] = useState(0);
   const [startX, setStartX] = useState(0);
@@ -40,19 +29,15 @@ export default function CardLibro({
     setEsFavorito((favoritos || []).includes(libro.id));
   }, [favoritos, libro.id]);
 
-  // Real-time user data subscription
+  // Suscripción a datos del usuario
   useEffect(() => {
     if (!libro?.usuarioId) return;
-    
     const userRef = doc(db, "usuarios", libro.usuarioId);
     const unsubscribe = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
         setDatosUsuario(docSnap.data());
       }
-    }, (error) => {
-      console.error("Error fetching user data:", error);
     });
-    
     return () => unsubscribe();
   }, [libro.usuarioId]);
 
@@ -67,17 +52,13 @@ export default function CardLibro({
       await updateDoc(docRef, { favoritos: nuevosFavoritos });
       setFavoritos(nuevosFavoritos);
       setEsFavorito(!esFavorito);
-      setAnimarFavorito(true);
       toast.success(esFavorito ? "Quitado de favoritos" : "Agregado a favoritos", {
         position: "bottom-center",
         autoClose: 1200,
       });
     } catch (error) {
       console.error("Error actualizando favoritos:", error);
-      toast.error("Hubo un error", {
-        position: "bottom-center",
-        autoClose: 1200,
-      });
+      toast.error("Hubo un error", { position: "bottom-center", autoClose: 1200 });
     }
   };
 
@@ -98,7 +79,6 @@ export default function CardLibro({
       const snap = await getDocs(q);
       const usuariosSet = new Set();
       const usuariosData = [];
-
       for (const docLibro of snap.docs) {
         const data = docLibro.data();
         if (!usuariosSet.has(data.usuarioId)) {
@@ -109,7 +89,6 @@ export default function CardLibro({
           }
         }
       }
-
       setUsuariosQuePublicaron(usuariosData);
       setMostrarModalUsuarios(true);
     } catch (error) {
@@ -120,20 +99,18 @@ export default function CardLibro({
   if (!libro) return null;
 
   return (
-    <div className=" bg-zinc-900 text-white rounded-xl shadow-md overflow-hidden mb-4 p-3 w-[170px] min-h-[320px] flex flex-col justify-between relative">
+    <div
+      className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 flex flex-col"
+      style={{ width: "200px", height: "340px" }} // 🔥 Ajusté altura para incluir botón de usuarios
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Imagen */}
-      <div
-        className="w-full h-[150px] rounded-md overflow-hidden relative"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
- 
-
-
+      <div className="w-full h-[150px] bg-gray-50 relative flex items-center justify-center">
         <img
           src={libro.imagenes?.[indiceImagen] || "https://via.placeholder.com/100x150"}
           alt={libro.nombre}
-          className="w-full h-full object-cover"
+          className="max-h-full max-w-full object-contain"
         />
         {libro.imagenes?.length > 1 && (
           <div className="absolute bottom-1 right-1 flex gap-1 z-10">
@@ -149,115 +126,125 @@ export default function CardLibro({
         )}
       </div>
 
-      {/* Info */}
-      <div className="mt-1 text-xs flex-1">
-        <div className="flex justify-between items-start">
-          <h3 className="font-semibold text-[13px] text-white line-clamp-2">
-            {libro.nombre || "Sin título"}
-          </h3>
-          {!esMio && (
+      {/* Contenido */}
+      <div className="flex-1 flex flex-col justify-between p-3">
+        {/* Info */}
+        <div>
+          <div className="flex justify-between items-start">
+            <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+              {libro.nombre}
+            </h3>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleFavorito();
-              }}
-              className={`text-[#f7b22a] text-sm ${animarFavorito ? "scale-125" : ""}`}
+              onClick={toggleFavorito}
+              className={`p-1 rounded-full ${
+                esFavorito ? "bg-yellow-50" : "bg-gray-50 hover:bg-gray-100"
+              }`}
+              aria-label="Favorito"
             >
-              {esFavorito ? <FaStar /> : <FaRegStar />}
-            </button>
-          )}
-        </div>
-        <p className="text-[11px] text-gray-400 line-clamp-1">{libro.autor}</p>
-        <p className="text-[11px] text-gray-500 line-clamp-1">{libro.editorial}</p>
-
-{libro.cantidad > 1 && (
-  <button
-    onClick={cargarUsuariosQuePublicaron}
-    className="mt-1 text-[10px] text-yellow-300 bg-zinc-800 border border-yellow-400 rounded-full px-2 py-0.5 inline-flex items-center gap-1 hover:bg-yellow-400 hover:text-black transition"
-    title="Ver usuarios que publicaron este libro"
-  >
-    <FaUsers className="text-[12px]" />
-    {libro.cantidad} usuarios lo publicaron
-  </button>
-)}
-
-
-
-        {libro.valorToken > 0 && (
-          <span className="bg-[#f7b22a] text-black text-[11px] px-2 py-0.5 rounded-full inline-block mt-1">
-            {libro.valorToken} TK
-          </span>
-        )}
-
-        {datosUsuario?.ciudad && (
-          <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-1">
-            <FiMapPin /> {datosUsuario.ciudad}
-          </p>
-        )}
-      </div>
-
-      {/* Acciones */}
-      <div className="mt-2">
-        {!esMio ? (
-          <button
-            onClick={() => navigate(`/propuesta/${libro.id}`)}
-            className="w-full bg-[#f7b22a] text-black px-2 py-1 text-[11px] font-bold rounded-full hover:bg-yellow-300 transition"
-          >
-            ¡Intercambiar!
-          </button>
-        ) : (
-          <div className="flex justify-between items-center text-[10px] mt-1">
-            <span className="text-green-400">Este libro es tuyo</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditar();
-              }}
-              className="text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded-full"
-            >
-              Editar
+              {esFavorito ? (
+                <StarFill className="text-yellow-500 w-4 h-4" />
+              ) : (
+                <Star className="text-gray-400 w-4 h-4" />
+              )}
             </button>
           </div>
-        )}
+          <p className="text-xs text-gray-600 truncate">{libro.autor}</p>
+          <div className="text-[10px] text-gray-500 flex items-center mt-1">
+            <GeoAlt className="mr-1 w-3 h-3 flex-shrink-0" />
+            <span className="truncate">
+              {datosUsuario.ciudad || "Ubicación no especificada"}
+            </span>
+          </div>
+
+          {/* Cantidad de usuarios */}
+          {libro.cantidad > 1 ? (
+            <button
+              onClick={cargarUsuariosQuePublicaron}
+              className="mt-2 w-full text-[11px] text-blue-500 font-medium flex items-center justify-between border border-blue-100 px-2 py-1 rounded-full hover:bg-blue-50 transition"
+            >
+              <span className="flex items-center">
+                <PersonPlus className="mr-1 w-3.5 h-3.5" />
+                Ver {libro.cantidad} usuarios más
+              </span>
+              <ChevronRight className="w-3 h-3 opacity-70" />
+            </button>
+          ) : (
+            <div className="h-6"></div> // 🔹 Espacio reservado para mantener altura
+          )}
+        </div>
+
+        {/* Botón */}
+        <div className="mt-2">
+          {!esMio ? (
+            <button
+              onClick={() => navigate(`/propuesta/${libro.id}`)}
+              className="w-full bg-[#f7b22a] text-black text-xs font-bold rounded-full py-1 hover:bg-yellow-300 transition"
+            >
+              ¡Intercambiar!
+            </button>
+          ) : (
+            <div className="flex justify-between items-center text-[10px] mt-1">
+              <span className="text-green-400">Este libro es tuyo</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditar();
+                }}
+                className="text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded-full"
+              >
+                Editar
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal Usuarios */}
       {mostrarModalUsuarios && (
-  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
-    <div className="bg-white text-black rounded-lg p-4 max-w-sm w-full shadow-lg relative">
-      <h3 className="text-lg font-bold mb-2">Usuarios que publicaron este libro</h3>
-      <button
-        className="absolute top-2 right-2 text-sm text-gray-500 hover:text-red-500"
-        onClick={() => setMostrarModalUsuarios(false)}
-      >
-        ✕
-      </button>
-      {usuariosQuePublicaron.length === 0 ? (
-        <p className="text-sm text-gray-500">Cargando...</p>
-      ) : (
-        <ul className="space-y-3 max-h-60 overflow-y-auto">
-          {usuariosQuePublicaron.map((u) => (
-            <li key={u.id} className="flex items-center gap-3 border-b pb-2">
-              <img
-                src={u.avatar || "https://via.placeholder.com/32"}
-                alt="avatar"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-              <div>
-                <strong>{u.nombre || "Usuario"}</strong>
-                {u.ciudad && <span className="text-gray-500 text-sm"> ({u.ciudad})</span>}
-                {u.id === usuarioActivo?.id && (
-                  <span className="ml-2 text-xs text-green-600 font-semibold">Es tu publicación</span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Usuarios que publicaron</h3>
+              <button
+                onClick={() => setMostrarModalUsuarios(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto">
+              {usuariosQuePublicaron.length === 0 ? (
+                <div className="p-5 text-center text-gray-500">
+                  <p>Cargando usuarios...</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {usuariosQuePublicaron.map((u) => (
+                    <li key={u.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={u.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(u.nombre || 'U')}
+                          alt={u.nombre || 'Usuario'}
+                          className="w-10 h-10 rounded-full object-cover bg-gray-100"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 truncate">{u.nombre || 'Usuario'}</p>
+                          {u.ciudad && (
+                            <span className="text-sm text-gray-500 flex items-center">
+                              <GeoAlt className="w-3.5 h-3.5 mr-1" />
+                              {u.ciudad}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 }
