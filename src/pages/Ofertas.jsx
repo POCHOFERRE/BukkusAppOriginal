@@ -21,6 +21,7 @@ import {
   FiCheck,
   FiX,
   FiTrash2,
+  FiBookOpen
 } from "react-icons/fi";
 import BuoDormido from "../components/svgs/BuoDormido";
 
@@ -31,6 +32,9 @@ export default function Ofertas() {
   const [historial, setHistorial] = useState([]);
   const [tab, setTab] = useState("recibidas");
   const [cargando, setCargando] = useState(false);
+  const [mostrarBiblioteca, setMostrarBiblioteca] = useState(false);
+  const [bibliotecaLibros, setBibliotecaLibros] = useState([]);
+  const [ofertaSeleccionada, setOfertaSeleccionada] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,11 +95,34 @@ export default function Ofertas() {
     return () => unsub();
   }, [usuarioActivo]);
 
-  const aceptarOferta = async (oferta) => {
-    if (!window.confirm("¿Querés aceptar esta oferta?")) return;
+  const abrirBiblioteca = async (oferta) => {
+    try {
+      setOfertaSeleccionada(oferta);
+      setCargando(true);
+      const librosCargados = [];
+      for (const libroId of oferta.bibliotecaVisible || []) {
+        const libroSnap = await getDoc(doc(db, "libros", libroId));
+        if (libroSnap.exists()) {
+          librosCargados.push({ id: libroSnap.id, ...libroSnap.data() });
+        }
+      }
+      setBibliotecaLibros(librosCargados);
+      setMostrarBiblioteca(true);
+    } catch (error) {
+      console.error("Error cargando biblioteca:", error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const aceptarOferta = async (oferta, libroElegidoId) => {
+    if (!window.confirm("¿Querés aceptar esta oferta con este libro?")) return;
     setCargando(true);
     try {
-      await updateDoc(doc(db, "ofertas", oferta.id), { estado: "aceptada" });
+      await updateDoc(doc(db, "ofertas", oferta.id), { 
+        estado: "aceptada", 
+        libroAceptadoId: libroElegidoId 
+      });
 
       const participantes = [...new Set([oferta.de, oferta.para])];
       await setDoc(doc(db, "chats", oferta.id), {
@@ -104,6 +131,7 @@ export default function Ofertas() {
         libroId: oferta.libroId,
         ofertaId: oferta.id,
       });
+      setMostrarBiblioteca(false);
     } catch (error) {
       console.error("Error al aceptar oferta:", error);
       alert("❌ Hubo un error al aceptar la oferta");
@@ -153,11 +181,13 @@ export default function Ofertas() {
             <strong>{oferta.usuario?.nombre || "Usuario"}</strong>{" "}
             {esRecibida ? "te ofrece" : "recibió tu propuesta"}:
           </p>
-          <p className="text-gray-800 font-semibold">{oferta.oferta}</p>
+          {oferta.tipoOferta === "biblioteca" ? (
+            <p className="text-gray-800 font-semibold">Su biblioteca completa</p>
+          ) : (
+            <p className="text-gray-800 font-semibold">{oferta.oferta}</p>
+          )}
           {oferta.comentario && (
-            <p className="text-sm italic text-gray-500">
-              {oferta.comentario}
-            </p>
+            <p className="text-sm italic text-gray-500">{oferta.comentario}</p>
           )}
           {oferta.libro?.nombre && (
             <p className="text-xs text-gray-500 mt-1">
@@ -183,14 +213,15 @@ export default function Ofertas() {
       )}
 
       {esRecibida && oferta.estado === "pendiente" && (
-        <div className="flex gap-3 mt-2">
-          <button
-            onClick={() => aceptarOferta(oferta)}
-            disabled={cargando}
-            className="bg-green-500 text-white px-3 py-1 rounded text-sm flex items-center gap-1 disabled:opacity-50"
-          >
-            <FiCheck /> Aceptar
-          </button>
+        <div className="flex flex-wrap gap-3 mt-2">
+          {oferta.tipoOferta === "biblioteca" && (
+            <button
+              onClick={() => abrirBiblioteca(oferta)}
+              className="bg-blue-500 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
+            >
+              <FiBookOpen /> Ver biblioteca
+            </button>
+          )}
           <button
             onClick={() => rechazarOferta(oferta)}
             disabled={cargando}
@@ -266,6 +297,46 @@ export default function Ofertas() {
           )
         )}
       </div>
+
+      {/* 📌 Modal Biblioteca */}
+      {mostrarBiblioteca && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-4 max-w-lg w-full shadow-lg relative">
+            <h3 className="text-lg font-bold mb-3">Biblioteca del oferente</h3>
+            <button
+              className="absolute top-2 right-2 text-sm text-gray-500 hover:text-red-500"
+              onClick={() => setMostrarBiblioteca(false)}
+            >
+              ✕
+            </button>
+            {bibliotecaLibros.length === 0 ? (
+              <p className="text-sm text-gray-500">No hay libros para mostrar.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+                {bibliotecaLibros.map((libro) => (
+                  <div
+                    key={libro.id}
+                    className="border rounded p-2 flex flex-col items-center"
+                  >
+                    <img
+                      src={libro.imagenes?.[0] || "https://via.placeholder.com/60x90"}
+                      alt={libro.nombre}
+                      className="w-20 h-28 object-cover rounded"
+                    />
+                    <p className="text-xs mt-1 text-center line-clamp-2">{libro.nombre}</p>
+                    <button
+                      onClick={() => aceptarOferta(ofertaSeleccionada, libro.id)}
+                      className="mt-2 bg-green-500 text-white px-2 py-1 rounded text-xs"
+                    >
+                      Aceptar con este
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
