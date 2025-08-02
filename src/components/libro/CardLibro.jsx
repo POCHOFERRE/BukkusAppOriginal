@@ -100,8 +100,8 @@ export default function CardLibro({
 
   return (
     <div
-      className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 flex flex-col"
-      style={{ width: "200px", height: "340px" }} // 🔥 Ajusté altura para incluir botón de usuarios
+      className="card-libro relative overflow-hidden flex flex-col"
+      style={{ width: "200px", height: "340px" }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -148,12 +148,10 @@ export default function CardLibro({
               )}
             </button>
           </div>
-          <p className="text-xs text-gray-600 truncate">{libro.autor}</p>
-          <div className="text-[10px] text-gray-500 flex items-center mt-1">
+          <p className="autor text-xs font-medium">{libro.autor}</p>
+          <div className="ciudad text-[10px] flex items-center mt-1">
             <GeoAlt className="mr-1 w-3 h-3 flex-shrink-0" />
-            <span className="truncate">
-              {datosUsuario.ciudad || "Ubicación no especificada"}
-            </span>
+            <span>{datosUsuario.ciudad || "Ubicación no especificada"}</span>
           </div>
 
           {/* Cantidad de usuarios */}
@@ -169,7 +167,14 @@ export default function CardLibro({
               <ChevronRight className="w-3 h-3 opacity-70" />
             </button>
           ) : (
-            <div className="h-6"></div> // 🔹 Espacio reservado para mantener altura
+            <div className="h-6"></div>
+          )}
+
+          {/* Tokens */}
+          {libro.valorToken > 0 && (
+            <div className="token-badge rounded-full px-2 py-0.5 text-xs font-semibold mt-1 inline-block">
+              {libro.valorToken} TK
+            </div>
           )}
         </div>
 
@@ -178,7 +183,7 @@ export default function CardLibro({
           {!esMio ? (
             <button
               onClick={() => navigate(`/propuesta/${libro.id}`)}
-              className="w-full bg-[#f7b22a] text-black text-xs font-bold rounded-full py-1 hover:bg-yellow-300 transition"
+              className="w-full bg-[#f7b22a] text-black text-xs font-bold rounded-full py-1 hover:bg-yellow-300 transition texto-sobre-amarillo"
             >
               ¡Intercambiar!
             </button>
@@ -201,8 +206,8 @@ export default function CardLibro({
 
       {/* Modal Usuarios */}
       {mostrarModalUsuarios && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
+        <div className="modal-background flex justify-center items-center p-4">
+          <div className="modal-content">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">Usuarios que publicaron</h3>
               <button
